@@ -1,0 +1,132 @@
+---
+title: "Vignette"
+format: html
+editor: visual
+---
+
+## Generate plots of partial correlation
+
+This snippet of code will generate the plot of partial correlation between Y and $X^{'}$ conditional $Z$. 
+
+## Run the code to reproduce the plots
+## This will reproduce Figure.2 
+
+```{r}
+library(numDeriv)
+library(latex2exp)
+ParCorsq1 <- function(gam,beta, alphaz, w){
+  w = 1
+  alphax = 1  #alphaz*w
+  
+  Num <- (((alphax*gam*beta)^2 + ((alphaz*beta)^2)  - 2*((alphax*beta*alphaz*gam)^2) )/(1 - (alphax*gam*alphaz)^2)) - (alphaz*beta)^2
+  Den  <- 1 - (alphaz*beta)^2
+  
+  Num/Den
+}
+
+
+alpha = seq(0.001, .999999,length=200)
+parm <- list()
+parm$beta = 0.64 ; parm$gam = 0.13; 
+plot(seq(0.001, .999999,length=200), ParCorsq1(parm$gam,parm$beta, alpha , w=1), lwd=6, col="pink", xlab=expression(alpha),
+     ylab=TeX(r'($R^{2}_{Y,X.Z^{'}}$)'), type="l")
+
+```
+
+
+## This will reproduce Figure.4 
+```{r}
+require(numDeriv)
+require(latex2exp)
+#--- Partial correlation between Y an X', conditional on Z' (R^{2}_{Y,X'.Z'})
+ParCorsq0 <- function(gam,beta, alphaz, w, a0){
+  alphax = a0 + alphaz*w
+  
+  Num <- (((alphax*gam*beta)^2 + ((alphaz*beta)^2)  - 2*((alphax*beta*alphaz*gam)^2) )/(1 - (alphax*gam*alphaz)^2)) - (alphaz*beta)^2
+  Den  <- 1 - (alphaz*beta)^2
+  
+  Num/Den
+}
+ParCorsq0 <- Vectorize(ParCorsq0,"alphaz")
+parm = list(); parm$beta = 0.5 ; parm$gam <- 0.19; parm$w = 1 ; parm$a0 = 0  
+
+par(mar = c(5, 5, 4, 2) + 0.1, font=2, cex=1.4)
+
+alphaz = seq(0.001, .999999,length=200)
+plot(alphaz, ParCorsq0(gam=parm$gam,beta=parm$beta, alphaz=alphaz,w=parm$w, 0.), lwd=6, col="pink",xlab=expression(alpha[z]),
+     ylab=TeX(r'($R^{2}_{Y,X^{'}.Z^{'}}$)'), type="l")
+abline(v = 0.6,lwd=4,lty=2)
+```
+
+
+## This will reproduce Figure.5 
+```{r}
+require(numDeriv)
+require(latex2exp)
+#--- Partial correlation between Y an X', conditional on Z' (R^{2}_{Y,X'.Z'})
+ParCorsq0 <- function(gam,beta, alphaz, w, a0){
+  alphax = a0 + alphaz*w
+  
+  Num <- (((alphax*gam*beta)^2 + ((alphaz*beta)^2)  - 2*((alphax*beta*alphaz*gam)^2) )/(1 - (alphax*gam*alphaz)^2)) - (alphaz*beta)^2
+  Den  <- 1 - (alphaz*beta)^2
+  
+  Num/Den
+}
+ParCorsq0 <- Vectorize(ParCorsq0,"alphaz")
+parm = list(); parm$beta = 1 ; parm$gam <- 1; parm$w = -1 ; parm$a0 = 0  
+
+par(mar = c(5, 5, 4, 2) + 0.1, font=2, cex=1.4)
+
+alphaz = seq(0.001, .999999,length=200)
+plot(alphaz, ParCorsq0(gam=parm$gam,beta=parm$beta, alphaz=alphaz,w=parm$w, 0.), lwd=6, col="pink",xlab=expression(alpha[z]),
+     ylab=TeX(r'($R^{2}_{Y,X^{'}.Z^{'}}$)'), type="l")
+```
+
+## This will provide the plot not shown in the paper
+```{r}
+require(numDeriv)
+require(latex2exp)
+#---- Plot discussed in the paper ( plot not shown - will now be shown) (06/29/24)
+
+ParCorsq0 <- function(gam,beta, alphaz, w, a0){
+  alphax = a0 + alphaz*w
+  
+  Num <- (((alphax*gam*beta)^2 + ((alphaz*beta)^2)  - 2*((alphax*beta*alphaz*gam)^2) )/(1 - (alphax*gam*alphaz)^2)) - (alphaz*beta)^2
+  Den  <- 1 - (alphaz*beta)^2
+  
+  Num/Den
+}
+ParCorsq0 <- Vectorize(ParCorsq0,"alphaz")
+parm = list(); parm$beta = 1 ; parm$gam <- 1; parm$w = 0.8 ; parm$a0 = 0.2;
+
+par(mar = c(5, 5, 4, 2) + 0.1, font=2, cex=1.4)
+alphaz = seq(0.001, .999999,length=200)
+plot(alphaz, ParCorsq0(gam=parm$gam,beta=parm$beta, alphaz=alphaz,w=0.8, 0.2), lwd=6, col="pink",xlab=expression(alpha[z]),
+     ylab=TeX(r'($R^{2}_{Y,X^{'}.Z^{'}}$)'), type="l")
+
+
+```
+
+
+## This will produce Figure 6
+```{r}
+require(numDeriv)
+require(latex2exp)
+DevFun <- function(alphaz, gam,beta,w){
+  alphax = alphaz*w
+  
+  Num <- ((alphaz*beta*w*gam)^2)*(1 - 2*(alphaz^2) + (alphaz^4))
+  Den = (1 - (alphaz*beta)^2)*(1 - (w*gam*(alphaz^2))^2)
+  
+  #Num <- (((alphax*gam*beta)^2 + (alphaz*beta)^2  - 2*(alphax*beta*alphaz*gam)^2)/(1 - (alphax*gam*alphaz)^2)) - (alphaz*beta)^2
+  #Den  <- 1 - (alphaz*beta)^2
+  Num/Den
+  
+}
+
+Dev0 <- grad(DevFun, alphaz, gam = gam, beta=beta, w=-1)
+
+par(font.axis=2, mar = c(5, 8, 4, 2) + 0.1, font.lab=2, font=2)
+plot(alphaz, Dev0, type = "l", xlab=expression(alpha[z]), ylab=TeX(r'($\frac{\partial R^{2}_{Y,X^{'}.Z^{'}}}{\partial \alpha_z}$)'),
+     lwd=6, col="red", cex.lab=2.)
+```
